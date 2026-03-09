@@ -30,27 +30,13 @@ MONGO_MANAGER_KEY = 'your key'
 ```
 
 3. Generate key.txt using `setup.sh` just type `bash setup.sh`
-4. Create a file `parol.txt` and store there your password for mongodb 
-  - *Docker-compose will use it as a secret*
-  - *You may delete secret and just hard-type password in the docker-compose.yml*
+4. Set a password for mongodb inside docker-compose file (for each replica) 
 
-5. Install docker/docker-compose if not installed
-
-  5.2. Install certbot for Let's encrypt
-  ```bash
-  sudo apt update
-  sudo apt install certbot python3-certbot-nginx
-  ```
-
-  5.3. Configure certbot
-  ```bash
-  sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
-  sudo systemctl status certbot.timer # checks if cron job to auto update certificate is running
-```
+5. Install docker if not installed
 
 6. run 
 ```bash
-sudo docker-compose up -d`
+sudo docker compose up -d
 ``` 
    - *-d here to run in the background*
 7. Enter inside of mongodb container
@@ -63,20 +49,8 @@ sudo docker exec -it main-mongodb bash
 ```bash
 mongosh -u root -p your_pass --host localhost --port 27017 
 ```
-- *your_pass here is that pass from parol.txt* \
-- *sometimes primary table might be in the another instance of mongo if you already created replica set*
 
-9. Go to admin table and create user for node to use
-```bash
-use admin
-db.createUser({
-  user: "your_user",
-  pwd: "your_pass", 
-  roles: [ { role: "readWrite", db: "HospitalDB" } ] 
-})
-```
-
-10. Create initiate replica set
+9. Create initiate replica set
 ```bash
 rs.initiate(
   {
@@ -88,6 +62,22 @@ rs.initiate(
     ]
   }
 )
+```
+
+10. Go to admin table and create user for node to use
+```bash
+use admin
+db.createUser({
+  user: "your_user",
+  pwd: "your_pass", 
+  roles: [ { role: "readWrite", db: "HospitalDB" } ] 
+})
+```
+
+11. Reload
+```bash
+sudo docker compose down
+sudo docker compose up -d
 ```
 
 **Note that values in all steps are related to each other!!!**

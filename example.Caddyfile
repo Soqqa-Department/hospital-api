@@ -1,0 +1,4 @@
+api.example.uz {
+  reverse_proxy node-api:3000
+  tls email@gmail.com
+}
