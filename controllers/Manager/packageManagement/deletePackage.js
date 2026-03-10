@@ -1,8 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import MedPackage from "../../../db/models/MedPackage.js";
 import { NotFound } from "../../../customErrors/Errors.js";
-import Patient from "../../../db/models/Patient.js";
 const deletePackage = async(req, res, next) => {
+    const { MedPackage, Patient } = req.models;
+
     try{
         const { id } = req.params; 
         const removedPackage = await MedPackage.findByIdAndDelete(id); 

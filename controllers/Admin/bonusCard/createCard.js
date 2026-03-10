@@ -1,4 +1,3 @@
-import BonusCard from "../../../db/models/BonusCard.js";
 import joi from "joi"; 
 import validateData from "../../../utils/validateData.js"; 
 import { StatusCodes } from "http-status-codes";
@@ -11,6 +10,8 @@ const joiSchema = joi.object({
 })
 
 const createCard = async (req, res, next) => {
+    const { BonusCard } = req.models;
+
     try{
         const data = await validateData(joiSchema,req.body); 
         const bonusCard = await BonusCard.create(data); 

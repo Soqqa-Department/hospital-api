@@ -1,8 +1,9 @@
 import { StatusCodes } from "http-status-codes";
-import Note from "../../../db/models/Note.js";
 import { NotFound, Unauthorized } from "../../../customErrors/Errors.js";
 
 const deleteNote = async(req, res, next) => {
+    const { Note } = req.models;
+
     try{
         const { id } = req.params;
         const docsId = req.userId; 

@@ -1,9 +1,10 @@
 import { StatusCodes } from "http-status-codes";
-import BonusCard from "../../../db/models/BonusCard.js";
 import { NotFound } from "../../../customErrors/Errors.js";
 
 
 const getCard = async(req, res, next) => {
+    const { BonusCard } = req.models;
+
     try{
         const {id} = req.params; 
         const card = await BonusCard.findOne({cardId: id}); 

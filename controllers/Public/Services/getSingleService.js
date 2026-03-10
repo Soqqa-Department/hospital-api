@@ -1,7 +1,8 @@
-import Service from "../../../db/models/Service.js";
 import { StatusCodes } from "http-status-codes";
 import { NotFound } from "../../../customErrors/Errors.js";
 const getSingleService = async (req, res, next) => {
+    const { Service } = req.models;
+
     try{
         const { id } = req.params;
         const service = await Service.findById(id); 

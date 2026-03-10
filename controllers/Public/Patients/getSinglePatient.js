@@ -1,7 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import Patient from "../../../db/models/Patient.js";
 import { NotFound } from "../../../customErrors/Errors.js";
 const getSinglePatient = async (req, res, next) =>{
+    const { Patient } = req.models;
+
     try{
         const { id } = req.params;
         const patient = await Patient.findById(id);

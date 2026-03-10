@@ -1,7 +1,8 @@
-import Patient from "../../../db/models/Patient.js";
 import { StatusCodes } from "http-status-codes";
 
 const getAllPatients = async(req, res, next) => {
+    const { Patient } = req.models;
+
     try{
         const projection = {
             phoneNumber: 0, 

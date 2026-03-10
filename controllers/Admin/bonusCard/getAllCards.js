@@ -1,7 +1,8 @@
-import BonusCard from "../../../db/models/BonusCard.js";
 import { StatusCodes } from "http-status-codes";
 
 const getAllCards = async(req, res, next) => {
+    const { BonusCard } = req.models;
+
     try{
         const bonusCards = await BonusCard.find(); 
         const response = {

@@ -1,7 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import Note from "../../../db/models/Note.js";
 
 const getDocsNotes = async(req, res, next) => {
+    const { Note } = req.models;
+
     try{
         const docsId = req.userId; 
         const {id} = req.params; // patient id 

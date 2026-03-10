@@ -1,5 +1,4 @@
 import { StatusCodes } from "http-status-codes";
-import MedPackage from "../../../db/models/MedPackage.js";
 import validateData from "../../../utils/validateData.js";
 import { NotFound } from "../../../customErrors/Errors.js";
 import joi from "joi"; 
@@ -11,6 +10,8 @@ const joiSchema = joi.object({
 }); 
 
 const addPkgService = async(req, res, next) => {
+    const { MedPackage } = req.models;
+
     try{
         const { serviceId, packageId } = await validateData(joiSchema, req.body); 
 

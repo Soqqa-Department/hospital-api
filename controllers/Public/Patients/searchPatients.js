@@ -1,7 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import Patient from "../../../db/models/Patient.js";
 
 const searchPatients = async (req, res, next) => {
+    const { Patient } = req.models;
+
     try{
         const { query } = req.query;
         const myQuery = new RegExp(query, 'i');

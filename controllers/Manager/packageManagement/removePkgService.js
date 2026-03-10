@@ -1,6 +1,5 @@
 import joi from "joi";
 import { StatusCodes } from "http-status-codes";
-import MedPackage from "../../../db/models/MedPackage.js";
 import validateData from "../../../utils/validateData.js";
 import { NotFound } from "../../../customErrors/Errors.js";
 import { mongoIdLength } from "../../../utils/constants.js";
@@ -11,6 +10,8 @@ const joiSchema = joi.object({
 })
 
 const removePkgService = async(req, res, next) =>{
+    const { MedPackage } = req.models;
+
     try{
         const { serviceId, packageId } = await validateData(joiSchema, req.body); 
         const updatedPackage = await MedPackage.findByIdAndUpdate(packageId, 

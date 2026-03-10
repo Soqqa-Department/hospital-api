@@ -1,7 +1,4 @@
 import { StatusCodes } from "http-status-codes";
-import Payment from "../../../db/models/Payments.js";
-import PatientMedicalRecord from "../../../db/models/PatientMedicalRecords.js";
-import Patient from '../../../db/models/Patient.js';
 import joi from "joi";
 import validateData from "../../../utils/validateData.js";
 
@@ -11,6 +8,8 @@ const joiSchema = joi.object({
 
 // main controller 
 const getCardStats = async (req, res, next) => {
+    const { Payment, PatientMedicalRecord, Patient } = req.models;
+
     try {
         // Валидация периода
         const { startDate } = await validateData(joiSchema, req.query);

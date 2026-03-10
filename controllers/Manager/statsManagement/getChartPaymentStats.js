@@ -1,5 +1,4 @@
 import { StatusCodes } from "http-status-codes";
-import Payment from "../../../db/models/Payments.js";
 import joi from "joi";
 import validateData from "../../../utils/validateData.js";
 import { BadRequest } from "../../../customErrors/Errors.js";
@@ -25,6 +24,8 @@ const formatDate = (date, periodType) => {
 const initializeDataArray = (length) => Array(length).fill(0);
 
 const getLineChartData = async (req, res, next) => {
+    const { Payment } = req.models;
+
     try {
         // Валидация входных данных
         const { startDate, periodType } = await validateData(joiSchema, req.query);

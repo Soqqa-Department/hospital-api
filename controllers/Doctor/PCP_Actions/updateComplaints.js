@@ -1,4 +1,3 @@
-import Patient from "../../../db/models/Patient.js";
 import { StatusCodes } from "http-status-codes";
 import joi from "joi"; 
 import validateData from "../../../utils/validateData.js";
@@ -11,6 +10,8 @@ const joiSchema = joi.object({
 })
 
 const updateComplaints = async (req, res, next) => {
+    const { Patient } = req.models;
+
     try{
         const { patientId, newText } = await validateData(joiSchema, req.body); 
         await Patient.findByIdAndUpdate(patientId, { $set: { complaints: newText } }, { projection: { complaints: 1 }});

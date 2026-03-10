@@ -1,6 +1,7 @@
-import Patient from "../../../db/models/Patient.js";
 
 const getActiveInpatient = async (req, res, next) => {
+    const { Patient } = req.models;
+
   try{ 
     const now = new Date();
     const projection = {

@@ -1,10 +1,10 @@
 import { StatusCodes } from "http-status-codes";
 import { NotFound, BadRequest } from "../../../customErrors/Errors.js";
-import Patient from '../../../db/models/Patient.js';
-import Payment from "../../../db/models/Payments.js";
 import unixTimeToDays from "../../../utils/unixTimeToDays.js";
 
 const makeInpatientRefund = async(req, res, next) => {
+    const { Patient, Payment } = req.models;
+
     try{
         const {id} = req.params;
         const now = (new Date()).getTime();

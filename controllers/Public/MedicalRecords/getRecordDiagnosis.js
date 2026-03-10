@@ -1,7 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import PatientMedicalRecord from "../../../db/models/PatientMedicalRecords.js";
 
 const getRecordDiagnosis = async (req, res, next) => {
+    const { PatientMedicalRecord } = req.models;
+
   try {
     // Validate query data using joi
     const { id } = req.params;

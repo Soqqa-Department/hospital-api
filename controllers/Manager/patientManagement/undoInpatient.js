@@ -1,5 +1,3 @@
-import Payments from "../../../db/models/Payments.js";
-import Patient from "../../../db/models/Patient.js";
 import validateData from "../../../utils/validateData.js";
 import { mongoIdLength } from "../../../utils/constants.js";
 import joi from "joi"; 
@@ -11,6 +9,8 @@ const joiSchema = joi.object({
 })
 
 const undoInpatient = async (req, res, next) => {
+    const { Payments, Patient } = req.models;
+
   try{
     const {patientId, packages, startedAt} = await validateData(joiSchema, req.body);
 

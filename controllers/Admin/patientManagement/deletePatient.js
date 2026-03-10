@@ -1,10 +1,9 @@
 import { StatusCodes } from "http-status-codes";
 import { BadRequest, NotFound } from "../../../customErrors/Errors.js";
-import Patient from "../../../db/models/Patient.js";
-import PatientMedicalRecord from "../../../db/models/PatientMedicalRecords.js";
-import Note from "../../../db/models/Note.js";
 
 const deletePatient = async(req, res, next) => {
+    const { Patient, PatientMedicalRecord, Note } = req.models;
+
     try{
         const { id } = req.params;
         // find pending medical records of that patient 

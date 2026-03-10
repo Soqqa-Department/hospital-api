@@ -1,11 +1,10 @@
 import mongoose from "mongoose"; 
-import BonusCard from "../../../db/models/BonusCard.js";
 import { StatusCodes } from "http-status-codes";
-import PatientMedicalRecord from "../../../db/models/PatientMedicalRecords.js";
 import { NotFound, BadRequest } from "../../../customErrors/Errors.js";
-import Payment from "../../../db/models/Payments.js";
 
 const makeRefund = async(req, res, next) => {
+    const { BonusCard, PatientMedicalRecord, Payment } = req.models;
+
     const session = await mongoose.startSession(); 
     session.startTransaction(); 
     let isTransactionFailed = false; 

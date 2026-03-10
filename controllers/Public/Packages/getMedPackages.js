@@ -1,5 +1,4 @@
 import { StatusCodes } from "http-status-codes";
-import MedPackage from "../../../db/models/MedPackage.js";
 import joi from "joi";
 import validateData from "../../../utils/validateData.js";
 const joiSchema = joi.object({
@@ -7,6 +6,8 @@ const joiSchema = joi.object({
     size: joi.number().min(0).allow(-1).required()
 })
 const getMedPackages = async(req, res, next) => {
+    const { MedPackage } = req.models;
+
     try{
         const query = await validateData(joiSchema, req.query); 
         const searchQuery = {...query}; 

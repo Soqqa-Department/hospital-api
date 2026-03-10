@@ -1,77 +1,61 @@
 import { StatusCodes } from "http-status-codes";
 import { BadRequest, NotFound, ServerError } from "../../../customErrors/Errors.js";
-import Payment from "../../../db/models/Payments.js";
-import joi from "joi"; 
-import Service from "../../../db/models/Service.js";
-import PatientMedicalRecord from "../../../db/models/PatientMedicalRecords.js";
-import Patient from "../../../db/models/Patient.js";
+import joi from "joi";
 import validateData from "../../../utils/validateData.js";
-import BonusCard from "../../../db/models/BonusCard.js";
 import mongoose from "mongoose";
 import { mongoIdLength, bonusPercentage } from "../../../utils/constants.js";
-
+import { emitQueueUpdate } from "../../../services/queueEmitter.js";
+import _ from "lodash";
 
 const joiSchema = joi.object({
     cardId: joi.string().optional(),
-    paymentMethod: joi.string().valid('Cash','Card').required(),
+    paymentMethod: joi.string().valid('Cash', 'Card').required(),
     servicePrice: joi.number().min(0).required(),
-    serviceTitle: joi.string().required(), 
-    patientId: joi.string().min(mongoIdLength).required(), 
+    serviceTitle: joi.string().required(),
+    patientId: joi.string().min(mongoIdLength).required(),
     serviceId: joi.string().min(mongoIdLength).required(),
-    bonusDeduction: joi.number().min(0).allow(0).required()
-})
+    bonusDeduction: joi.number().min(0).allow(0).required(),
+});
 
-const createMedicalRecord = async(req,res, next) => {
-    if(isNaN(bonusPercentage)) throw new ServerError('BONUS_PERCENTAGE is not a number');
-    const session = await mongoose.startSession(); 
-    session.startTransaction(); 
+const createMedicalRecord = async (req, res, next) => {
+    const { Patient, BonusCard, Payment, PatientMedicalRecord, Service } = req.models;
+
+    if (isNaN(bonusPercentage)) throw new ServerError('BONUS_PERCENTAGE is not a number');
+    const session = await mongoose.startSession();
+    session.startTransaction();
     let isTransactionFailed = false;
-    try{
-        const data = await validateData(joiSchema, req.body); 
-        const { 
-            serviceId, 
-            patientId, 
-            paymentMethod, 
-            cardId, 
-            bonusDeduction,
-            servicePrice, 
-            serviceTitle 
-        } = data;
-        if(servicePrice - bonusDeduction < 0) throw new BadRequest('Bonus deduction cannot exceed the price of the service');
-        // check if patient exists 
-        const currentUnix = new Date().getTime(); 
-        const patient = await Patient.findByIdAndUpdate(patientId,
-            { $set: { lastSeen: currentUnix } }
-        );
-        if(typeof patient === 'undefined' || patient === null) throw new NotFound("Patient not found, create the patient");
-        
-         
+    try {
+        const data = await validateData(joiSchema, req.body);
+        const { serviceId, patientId, paymentMethod, cardId, bonusDeduction, servicePrice, serviceTitle } = data;
+
+        if (servicePrice - bonusDeduction < 0) throw new BadRequest('Bonus deduction cannot exceed the price of the service');
+
+        const currentUnix = new Date().getTime();
+        const patient = await Patient.findByIdAndUpdate(patientId, { $set: { lastSeen: currentUnix } });
+        if (!patient) throw new NotFound("Patient not found, create the patient");
 
         const bonusCard = await BonusCard.findOneAndUpdate(
-            { cardId: cardId },
-            { $inc: { balance: -bonusDeduction } }, 
+            { cardId },
+            { $inc: { balance: -bonusDeduction } },
             { session, new: false }
-        ); 
-        if(bonusCard && bonusCard.balance < bonusDeduction) throw new BadRequest("Bonus deduction cannot exceed the balance on the card");
+        );
+        if (bonusCard && bonusCard.balance < bonusDeduction)
+            throw new BadRequest("Bonus deduction cannot exceed the balance on the card");
 
-        // create payment record
-        const paymentData = {
-            patientId: patientId,
+        const payment = new Payment({
+            patientId,
             amountBeforeDeduction: servicePrice,
-            bonusDeduction: bonusDeduction,
+            bonusDeduction,
             amountFinal: servicePrice - bonusDeduction,
             servicePaid: serviceId,
-            paymentMethod: paymentMethod,
-            bonusCardId: cardId ? cardId : null,
-            createdAt: new Date().getTime()
-        };
-        const payment = new Payment(paymentData); 
-        if(!payment) throw new BadRequest('Payment was unsuccessful');
-        await payment.save({ session }); 
+            paymentMethod,
+            bonusCardId: cardId ?? null,
+            createdAt: currentUnix,
+        });
+        if (!payment) throw new BadRequest('Payment was unsuccessful');
+        await payment.save({ session });
 
-
-        // Create med-record and add it to the queue of the service
-        const medRecordData = {
+        const medRecord = new PatientMedicalRecord({
             isInpatient: false,
             serviceTitle,
             patientId,
@@ -79,51 +63,51 @@ const createMedicalRecord = async(req,res, next) => {
             patientLastName: patient.lastName,
             paymentRecord: payment['_id'],
             status: 'queue',
-            serviceId: serviceId,
-            createdAt: new Date().getTime(),
-            queueNum: 1
-        }
-        const medRecord = new PatientMedicalRecord(medRecordData);
-        
-        if(!medRecord) throw new BadRequest("Medical record hasn't been created");
-        const service = await Service.findOneAndUpdate({_id: serviceId},
-            {
-                $push: {currentQueue: medRecord['_id']}
-            }, 
-            {
-                session, 
-                new: false,
-                projection: {
-                    createdAt: 0,
-                    updatedAt: 0,
-                    description: 0
-                }
-            }
-        );        
-        if(!service) throw new BadRequest("Failed to update the service");
-        else if(service.price !== servicePrice || service.title !== serviceTitle) throw new BadRequest("Incorrect data for service is provided");
+            serviceId,
+            createdAt: currentUnix,
+            queueNum: 1,
+        });
+        if (!medRecord) throw new BadRequest("Medical record hasn't been created");
 
-        // queue numbering for a service 
-        if(service.currentQueue.length === 0){
-            medRecord.set({queueNum: 1}); 
-        }else{
-            const lastRecordId = service.currentQueue[service.currentQueue.length - 1]; 
-            const lastRecord = await PatientMedicalRecord.findById(lastRecordId);
-            medRecord.set({queueNum: lastRecord.queueNum + 1 });
-        }
-        await medRecord.save({session});
+        const service = await Service.findOneAndUpdate(
+            { _id: serviceId },
+            { $push: { currentQueue: medRecord['_id'] } },
+            { session, new: false, projection: { createdAt: 0, updatedAt: 0, description: 0 } }
+        );
+        if (!service) throw new BadRequest("Failed to update the service");
+        if (service.price !== servicePrice || service.title !== serviceTitle)
+            throw new BadRequest("Incorrect data for service is provided");
 
-        await session.commitTransaction(); 
-        return res.status(StatusCodes.OK).json({success: true, medicalRecord: medRecord, payment});
-    }catch(err){
+        if (service.currentQueue.length === 0) {
+            medRecord.set({ queueNum: 1 });
+        } else {
+            const lastRecord = await PatientMedicalRecord.findById(
+                service.currentQueue[service.currentQueue.length - 1]
+            );
+            medRecord.set({ queueNum: lastRecord.queueNum + 1 });
+        }
+        await medRecord.save({ session });
+        await session.commitTransaction();
+
+        // Emit real-time queue update to connected clients
+        const updatedQueue = await Service.findById(serviceId).then(async (svc) => {
+            if (!svc) return [];
+            const records = await PatientMedicalRecord.find(
+                { _id: { $in: svc.currentQueue } },
+                { paymentRecord: 0, updatedAt: 0, __v: 0, mainDiagnosis: 0 }
+            );
+            return _.sortBy(records.map((r) => r.toObject()), 'createdAt');
+        });
+        emitQueueUpdate(req.tenantId, String(service.providedBy), updatedQueue);
+
+        return res.status(StatusCodes.OK).json({ success: true, medicalRecord: medRecord, payment });
+    } catch (err) {
         isTransactionFailed = true;
-        return next(err); 
-    }finally{
-        if(isTransactionFailed){
-            await session.abortTransaction(); 
-        }
+        return next(err);
+    } finally {
+        if (isTransactionFailed) await session.abortTransaction();
         await session.endSession();
     }
-}
+};
 
-export default createMedicalRecord; 
+export default createMedicalRecord;

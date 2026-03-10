@@ -1,5 +1,4 @@
 import { StatusCodes } from "http-status-codes";
-import PatientMedicalRecord from "../../../db/models/PatientMedicalRecords.js";
 import joi from "joi";
 import validateData from "../../../utils/validateData.js";
 
@@ -9,6 +8,8 @@ const joiSchema = joi.object({
 });
 
 const updateRecordDiagnosis = async (req, res, next) => {
+    const { PatientMedicalRecord } = req.models;
+
   try {
     // Validate request data using joi
     const { mainDiagnosis, recordId } = await validateData(joiSchema, req.body);

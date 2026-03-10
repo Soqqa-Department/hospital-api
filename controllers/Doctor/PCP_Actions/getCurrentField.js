@@ -1,4 +1,3 @@
-import Patient from "../../../db/models/Patient.js";
 import { StatusCodes } from "http-status-codes";
 import joi from "joi"; 
 import validateData from "../../../utils/validateData.js";
@@ -10,6 +9,8 @@ const joiSchema = joi.object({
 });
 
 const getCurrentCondition = async (req, res, next) => {
+    const { Patient } = req.models;
+
     try {
         const { field, patientId } = await validateData(joiSchema, req.params); 
         const patient = await Patient.findById(patientId);

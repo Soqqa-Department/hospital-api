@@ -1,5 +1,4 @@
 import { StatusCodes } from 'http-status-codes';
-import Patient from '../../../db/models/Patient.js';
 import joi from 'joi'; 
 import getPatientId from '../../../utils/getPatientId.js';
 import validateData from "../../../utils/validateData.js"; 
@@ -13,6 +12,8 @@ const schema = joi.object({
 })
 
 const createPatient = async (req, res, next) => {
+    const { Patient } = req.models;
+
     try{
         const data = await validateData(schema, req.body);  
         const seed = {

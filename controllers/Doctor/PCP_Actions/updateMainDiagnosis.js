@@ -1,5 +1,4 @@
 import { StatusCodes } from "http-status-codes";
-import Patient from "../../../db/models/Patient.js";
 import joi from "joi"; 
 import validateData from "../../../utils/validateData.js";
 import { mongoIdLength } from "../../../utils/constants.js";
@@ -10,6 +9,8 @@ const joiSchema = joi.object({
 });
 
 const updateMainDiagnosis = async (req, res, next) => {
+    const { Patient } = req.models;
+
     try{
         const { patientId, newText } = await validateData(joiSchema, req.body); 
         await Patient.findByIdAndUpdate(patientId, {$set: { mainDiagnosis: newText }});

@@ -1,8 +1,6 @@
 import { StatusCodes } from "http-status-codes";
-import PatientMedicalRecord from "../../../db/models/PatientMedicalRecords.js";
 import joi from "joi"; 
 import validateData from "../../../utils/validateData.js";
-import Payment from "../../../db/models/Payments.js";
 import getInterval from "../../../utils/getUnixTodayInterval.js";
 
 const joiSchema = joi.object({
@@ -20,6 +18,8 @@ const joiSchema = joi.object({
 });
 
 const getMedicalRecords = async(req, res, next) => {
+    const { PatientMedicalRecord, Payment } = req.models;
+
     try {
         const query = await validateData(joiSchema, req.query); 
         const querySize = Number(query['size']) > 0 ? Number(query['size']) : 10; 
