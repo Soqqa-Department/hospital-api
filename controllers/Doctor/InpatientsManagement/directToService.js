@@ -8,6 +8,8 @@ import Service from "../../../db/models/Service.js";
 import { BadRequest, NotFound } from "../../../customErrors/Errors.js"; 
 import { mongoIdLength } from "../../../utils/constants.js";
 import mongoose from "mongoose";
+import { getIO } from "../../../socket/index.js";
+import { QUEUE_NEW_RECORD } from "../../../socket/events.js";
 
 const joiSchema = joi.object({
     serviceId: joi.string().min(mongoIdLength).required(),
@@ -96,7 +98,14 @@ const directToService = async(req, res, next) => {
         }
         
         await medRecord.save({session});
-        await session.commitTransaction(); 
+        await session.commitTransaction();
+
+        // Notify all connected clients about the new queue record (WebSocket)
+        try {
+            getIO().of('/queue').to('queue').emit(QUEUE_NEW_RECORD, {
+                medicalRecord: medRecord,
+            });
+        } catch (_) { /* socket may not be used in test env */ }
         //---
 
         const response = { 

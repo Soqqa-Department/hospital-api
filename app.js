@@ -6,6 +6,8 @@ import ipRecords from "./access-records/ipRecords.js";
 import Auth from "./middleware/Auth.js";
 import AuthAdmin from "./middleware/AuthAdmin.js";
 import AuthManager from "./middleware/AuthManager.js";
+import { createServer } from "http";
+import { initSocketServer } from "./socket/index.js";
 
 
 // SECURITY PACKAGES 
@@ -23,6 +25,8 @@ import './jobs/clearPatientQueue.js';
 const PORT = process.env.PORT || 3000; 
 import express from "express";
 const app = express();
+const httpServer = createServer(app);
+initSocketServer(httpServer);
 
 // ROUTERS 
 import AdminRouter from './routes/AdminRouter.js'; 
@@ -50,7 +54,7 @@ app.use(limiter);
 const start = async () => {
     try{
         await connect(process.env.MONGO_URL);
-        app.listen(PORT, () => {
+        httpServer.listen(PORT, () => {
             console.log('server is running on port ' + PORT); 
             const ipAddressIntervalId = setInterval(() => {
                 ipRecords.clear();

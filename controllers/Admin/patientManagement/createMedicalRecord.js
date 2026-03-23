@@ -9,6 +9,8 @@ import validateData from "../../../utils/validateData.js";
 import BonusCard from "../../../db/models/BonusCard.js";
 import mongoose from "mongoose";
 import { mongoIdLength, bonusPercentage } from "../../../utils/constants.js";
+import { getIO } from "../../../socket/index.js";
+import { QUEUE_NEW_RECORD } from "../../../socket/events.js";
 
 
 const joiSchema = joi.object({
@@ -113,7 +115,15 @@ const createMedicalRecord = async(req,res, next) => {
         }
         await medRecord.save({session});
 
-        await session.commitTransaction(); 
+        await session.commitTransaction();
+
+        // Notify all connected clients about the new queue record (WebSocket)
+        try {
+            getIO().of('/queue').to('queue').emit(QUEUE_NEW_RECORD, {
+                medicalRecord: medRecord,
+            });
+        } catch (_) { /* socket may not be used in test env */ }
+
         return res.status(StatusCodes.OK).json({success: true, medicalRecord: medRecord, payment});
     }catch(err){
         isTransactionFailed = true;

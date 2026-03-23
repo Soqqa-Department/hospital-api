@@ -3,6 +3,8 @@ import PatientMedicalRecord from "../../../db/models/PatientMedicalRecords.js";
 import { BadRequest, NotFound } from "../../../customErrors/Errors.js";
 import Service from "../../../db/models/Service.js";
 import mongoose from "mongoose";
+import { getIO } from "../../../socket/index.js";
+import { QUEUE_RECORD_UPDATED } from "../../../socket/events.js";
 
 const redirectForRefund = async (req,res, next) => {
 
@@ -49,7 +51,16 @@ const redirectForRefund = async (req,res, next) => {
             service: updatedService
         };
 
-        await session.commitTransaction(); 
+        await session.commitTransaction();
+
+        // Notify all connected clients that a record status changed (WebSocket)
+        try {
+            getIO().of('/queue').to('queue').emit(QUEUE_RECORD_UPDATED, {
+                id: id,
+                status: 'toRefund',
+            });
+        } catch (_) { /* socket may not be used in test env */ }
+
         return res.status(StatusCodes.OK).json(response);
     }catch(err){
         isTransactionFailed = true;
