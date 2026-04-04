@@ -18,7 +18,8 @@ import updateAdmin from "../controllers/Manager/adminManagement/updateAdmin.js";
 import undoInpatient from "../controllers/Manager/patientManagement/undoInpatient.js";
 import getCardStats from "../controllers/Manager/statsManagement/getCardStats.js";
 import getLineChartData from "../controllers/Manager/statsManagement/getChartPaymentStats.js";
-const router = express.Router(); 
+import getAllCallLogs from '../controllers/Calls/getAllCallLogs.js';
+const router = express.Router();
 
 // Create admin account 
 router.post('/admins', createAdmin); 
@@ -57,4 +58,9 @@ router.patch('/inpatient/undo', undoInpatient);
 router.get('/stats/cards', getCardStats);
 router.get('/stats/chart/payment', getLineChartData);
 //
+
+// Calls
+router.get('/calls/logs', getAllCallLogs);
+//
+
 export default router;

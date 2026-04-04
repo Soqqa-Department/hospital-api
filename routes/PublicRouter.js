@@ -13,7 +13,8 @@ import getPayments from "../controllers/Public/Payments/getPayments.js";
 import getSinglePayment from "../controllers/Public/Payments/getSinglePayment.js";
 import getActiveInpatient from "../controllers/Public/Patients/getActiveInpatient.js";
 import getRecordDiagnosis from "../controllers/Public/MedicalRecords/getRecordDiagnosis.js";
-const router = express.Router(); 
+import getMyCallLogs from '../controllers/Calls/getMyCallLogs.js';
+const router = express.Router();
 
 // Patients 
 router.get('/patients', getAllPatients);
@@ -42,10 +43,13 @@ router.get("/doctors/single/:id", getSingleDoctor);
 router.get('/packages', getMedPackages);
 // 
 
-// Payments 
+// Payments
 router.get('/payments', getPayments);
-router.get('/payments/single/:id', getSinglePayment); 
-// 
+router.get('/payments/single/:id', getSinglePayment);
+//
 
+// Calls
+router.get('/calls/logs', getMyCallLogs);
+//
 
-export default router; 
+export default router;

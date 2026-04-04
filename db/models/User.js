@@ -60,6 +60,10 @@ const UserSchema = new mongoose.Schema({
         requried: function(){
             return this.role === 'Manager'
         }
+    },
+    callsAvailable: {
+        type: Boolean,
+        default: true
     }
 });
 
